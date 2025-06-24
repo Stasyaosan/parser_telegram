@@ -1,0 +1,1 @@
+DEFAULT_SAVE_FOLDER = 'saves'
