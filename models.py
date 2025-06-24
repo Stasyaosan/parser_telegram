@@ -1,0 +1,3 @@
+
+class TelegramParserModel:
+    pass
