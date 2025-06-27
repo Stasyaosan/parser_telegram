@@ -9,8 +9,8 @@ class TelegramParserController:
 
         self.view.browse_btn.config(command=self.view.browse_file)
         self.view.folder_browse_btn.config(command=self.view.browse_folder)
-        self.view.start_btn.config(command=self.start_parsing)
-        self.view.stop_btn.config(command=self.stop_parsing)
+        #self.view.start_btn.config(command=self.start_parsing)
+        #self.view.stop_btn.config(command=self.stop_parsing)
 
     def start_parsing(self):
         pass
