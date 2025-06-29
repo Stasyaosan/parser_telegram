@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import ttk
 
 
 class TelegramParserView:
@@ -11,11 +12,14 @@ class TelegramParserView:
 
         self.root.iconbitmap('icon.ico')
 
-        self.create_widgets()
-        self.setup_layout()
-
         self.file_path_var = tk.StringVar()
         self.folder_path_var = tk.StringVar()
+        self.progress_var = tk.DoubleVar()
+
+        self.contents_vars = {}
+
+        self.create_widgets()
+        self.setup_layout()
 
     def browse_file(self):
         file_path = filedialog.askopenfilename(filetypes=[('Text files', '*.txt')])
@@ -44,11 +48,23 @@ class TelegramParserView:
 
         self.content_frame = tk.LabelFrame(self.root, text='Tип контента для парсинга')
         content_types = ['images', 'videos', 'documents', 'audio', 'text']
+        self.contents_vars = {ctype: tk.BooleanVar(value=True) for ctype in content_types}
 
         for c in content_types:
-            var = tk.BooleanVar(value=True)
-            cb = tk.Checkbutton(self.content_frame, text=c, variable=var)
+            # var = tk.BooleanVar(value=True)
+            cb = tk.Checkbutton(self.content_frame, text=c, variable=self.contents_vars[c])
             cb.pack(side=tk.LEFT, padx=5)
+
+        self.controll_frame = tk.Frame(self.root)
+        self.start_btn = tk.Button(self.controll_frame, text='Начать парсинг')
+        self.stop_btn = tk.Button(self.controll_frame, text='Остановить', state=tk.DISABLED)
+
+        self.log_frame = tk.LabelFrame(self.root, text='Лог')
+        self.log_text = tk.Text(self.log_frame, height=10, wrap=tk.WORD, state=tk.DISABLED)
+        self.log_scroll = tk.Scrollbar(self.log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
+        self.log_text.configure(yscrollcommand=self.log_scroll.set)
+
+        self.progress_bar = ttk.Progressbar(self.root, variable=self.progress_var, maximum=100, mode='determinate')
 
     def setup_layout(self):
         self.file_frame.pack(pady=10, padx=10, fill=tk.X)
@@ -59,4 +75,42 @@ class TelegramParserView:
         self.folder_entry.pack(side=tk.LEFT, padx=5, pady=5, fill=tk.X, expand=True)
         self.folder_browse_btn.pack(side=tk.RIGHT, padx=5, pady=5)
 
-        self.content_frame.pack(fill=tk.X, expand=True)
+        self.content_frame.pack(fill=tk.X, padx=5, pady=5)
+
+        self.controll_frame.pack(pady=5, padx=5, fill=tk.X)
+        self.start_btn.pack(side=tk.LEFT, padx=5)
+        self.stop_btn.pack(side=tk.LEFT, padx=5)
+
+        self.log_frame.pack(padx=5, pady=5, fill=tk.BOTH, expand=True)
+        self.log_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.log_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.progress_bar.pack(padx=5, pady=5, fill=tk.X)
+
+    def clear_log(self):
+        self.log_text.delete(1.0, tk.END)
+
+    def log_message(self, message):
+        self.log_text.insert(tk.END, message + '\n')
+        self.log_text.see(tk.END)
+        self.root.update()
+
+    def get_selected_content_type(self):
+        s = []
+        for key, value in self.contents_vars.items():
+            if value.get():
+                s.append(key)
+
+        return s
+
+    def set_parsing_state(self, parsing):
+        if parsing:
+            self.start_btn.config(state=tk.DISABLED)
+            self.stop_btn.config(state=tk.NORMAL)
+        else:
+            self.start_btn.config(state=tk.NORMAL)
+            self.stop_btn.config(state=tk.DISABLED)
+
+    def update_progress(self, value):
+        self.progress_var.set(value)
+        self.root.update()
