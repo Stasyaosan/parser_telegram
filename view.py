@@ -91,8 +91,10 @@ class TelegramParserView:
         self.log_text.delete(1.0, tk.END)
 
     def log_message(self, message):
+        self.log_text.config(state=tk.NORMAL)
         self.log_text.insert(tk.END, message + '\n')
         self.log_text.see(tk.END)
+        self.log_text.config(state=tk.DISABLED)
         self.root.update()
 
     def get_selected_content_type(self):
