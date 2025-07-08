@@ -1,6 +1,8 @@
+import os.path
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
+import json
 
 
 class TelegramParserView:
@@ -21,19 +23,53 @@ class TelegramParserView:
         self.create_widgets()
         self.setup_layout()
 
+        if os.path.exists('file_browse.json'):
+            with open('file_browse.json', 'r', encoding='utf-8') as f:
+                file = json.load(f)
+            file = file['file']
+            self.file_path_var.set(file)
+            self.file_entry.insert(0, self.file_path_var.get())
+
+        if os.path.exists('folder_browse.json'):
+            with open('folder_browse.json', 'r', encoding='utf-8') as f:
+                file = json.load(f)
+            file = file['file']
+            self.folder_path_var.set(file)
+            self.folder_entry.insert(0, self.folder_path_var.get())
+
     def browse_file(self):
         file_path = filedialog.askopenfilename(filetypes=[('Text files', '*.txt')])
 
         if file_path:
-            self.file_path_var.set(file_path)
+            if os.path.exists('file_browse.json'):
+                with open('file_browse.json', 'r', encoding='utf-8') as f:
+                    file = json.load(f)
+                file = file['file']
+            else:
+                d = {'file': file_path}
+
+                with open('file_browse.json', 'w', encoding='utf-8') as f:
+                    json.dump(d, f, indent=4)
+                file = file_path
+
+            self.file_path_var.set(file)
             self.file_entry.insert(0, self.file_path_var.get())
         return file_path
 
     def browse_folder(self):
         folder_path = filedialog.askdirectory()
-
         if folder_path:
-            self.folder_path_var.set(folder_path)
+            if os.path.exists('folder_browse.json'):
+                with open('folder_browse.json', 'r', encoding='utf-8') as f:
+                    file = json.load(f)
+                file = file['file']
+            else:
+                d = {'file': folder_path}
+
+                with open('folder_browse.json', 'w', encoding='utf-8') as f:
+                    json.dump(d, f, indent=4)
+                file = folder_path
+            self.folder_path_var.set(file)
             self.folder_entry.insert(0, self.folder_path_var.get())
         return folder_path
 
@@ -90,9 +126,10 @@ class TelegramParserView:
     def clear_log(self):
         self.log_text.delete(1.0, tk.END)
 
-    def log_message(self, message):
+    def log_message(self, message, color='black'):
         self.log_text.config(state=tk.NORMAL)
-        self.log_text.insert(tk.END, message + '\n')
+        self.log_text.insert('end', message + '\n', color)
+        self.log_text.tag_config(color, foreground=color)
         self.log_text.see(tk.END)
         self.log_text.config(state=tk.DISABLED)
         self.root.update()

@@ -1,3 +1,4 @@
+import os.path
 from tkinter.messagebox import showerror
 from requests import get, RequestException
 import re
@@ -33,6 +34,29 @@ class TelegramParserModel:
             showerror('Ошибка', f'Не поддерживается тип контента для парсинга')
             return
         extensions = '|'.join(SUPPORTED_CONTENT_TYPES[content_type])
-        pattern = rf'https?://[^\s]+?\.(?:{extensions})(?:\?[^\s]*)?'
+        pattern = rf'https[^\s\'">]+\.(?:{extensions})(?=[^\w\./]|$)'
         d = re.findall(pattern, content, re.IGNORECASE)
-        print(d)
+        links_image = []
+
+        for i in d:
+            if i not in links_image and ' ' not in i:
+                links_image.append(i)
+
+        count = 1
+        for link in links_image:
+            filename = f'{count}.{link.split('.')[-1]}'
+
+            save_path = os.path.join(save_folder, filename)
+            if os.path.exists(save_path):
+                callback(f'Файл {filename} уже существует', '#ff801f')
+                count += 1
+                continue
+            response = get(link, stream=True, timeout=10)
+            try:
+                with open(save_path, 'wb') as f:
+                    for c in response.iter_content(1024):
+                        f.write(c)
+            except Exception as e:
+                callback(f'Ошибка загрузки: {e}', '#ff381f')
+            count += 1
+        return count
