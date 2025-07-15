@@ -1,8 +1,9 @@
+import os
 from threading import Thread
 from models import TelegramParserModel
 from view import TelegramParserView
 from tkinter import messagebox
-import os
+from time import sleep
 
 
 class TelegramParserController:
@@ -21,16 +22,16 @@ class TelegramParserController:
         selected_types = self.view.get_selected_content_type()
 
         if not file_path:
-            messagebox.showerror('Ошибка', 'Укажите файл с каналами telegram')
+            messagebox.showerror('Ошибка', 'Укажите файл с каналами Telegram')
             return
         if not selected_types:
-            messagebox.showerror('Ошибка', 'Выбирите не менее одного типа контента')
+            messagebox.showerror('Ошибка', 'Выберите хотя бы один тип контента')
             return
 
         try:
             channels = self.model.load_channels(file_path)
         except Exception as e:
-            messagebox.showerror('Ошибка', f'Файл не содержит каналов')
+            messagebox.showerror('Ошибка', 'Файл не содержит канадлов для парсинга')
 
         self.model.parsing = True
         self.model.stop_parsing = False
@@ -52,21 +53,42 @@ class TelegramParserController:
 
             channel_name = i.split('/')[-1]
             channel_folder = os.path.join(save_folder, channel_name)
+
             os.makedirs(channel_folder, exist_ok=True)
 
             for content_type in selected_types:
                 if self.model.stop_parsing:
                     break
+
+                if content_type == 'text':
+                    self.model.save_text_content(
+                        content,
+                        channel_folder,
+                        callback=self.view.log_message
+                    )
+                elif content_type == 'videos':
+                    self.model.save_video_content(
+                        content,
+                        content_type,
+                        channel_folder,
+                        callback=self.view.log_message
+                    )
                 else:
-                    if content_type == 'text':
-                        pass
-                    else:
-                        self.model.save_media_content(
-                            content,
-                            content_type,
-                            channel_folder,
-                            callback=self.view.log_message
-                        )
+                    count = self.model.save_media_content(
+                        content,
+                        content_type,
+                        channel_folder,
+                        callback=self.view.log_message
+                    )
+                    if count > 0:
+                        self.view.log_message(f'Сохранено {count} файлов типа {content_type}')
+        self.model.parsing = False
+        self.view.update_progress(100)
+
+        if not self.model.stop_parsing:
+            self.view.log_message('\n Парсинг завершен!')
+        else:
+            self.view.log_message('\n Парсинг остановлен пользователем')
 
     def stop_parsing(self):
         self.model.stop_parsing = True
