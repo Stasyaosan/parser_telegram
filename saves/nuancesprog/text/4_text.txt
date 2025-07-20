@@ -1,0 +1,1 @@
+Автоматизация проверки датасетов значительно упрощает жизнь. Узнаем, как же это сделать с помощью инструмента для управления облачной инфраструктурой Terraform и сервиса для анализа больших наборов данных BigQuery.https://nsprg.ru/vLJYZmVK: https://nsprg.ru/xeyJlxДзен: https://nsprg.ru/xR3Bdv@nuancesprog #Terraform #BigQuery

@@ -1,0 +1,1 @@
+Почему useMemo  -  не просто кэширование и когда стоит использовать этот хук? Разберем реальный сценарий.https://nsprg.ru/OjeGovVK: https://nsprg.ru/OQKypx@nuancesprog #React
