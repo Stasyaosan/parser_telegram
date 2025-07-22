@@ -23,7 +23,7 @@ class File_Explorer:
         self.update_file_list()
 
     def create_widgets(self):
-        self.tree = ttk.Treeview(self.root, columns=('Size', 'Type'), selectmode='browse')
+        self.tree = ttk.Treeview(self.root, columns=('Image', 'Size', 'Type'), selectmode='browse')
         self.tree.heading('#0', text='Имя')
         self.tree.heading('Size', text='Размер')
         self.tree.heading('Type', text='Тип')
@@ -69,10 +69,21 @@ class File_Explorer:
         top = tk.Toplevel(self.root)
         top.title(os.path.basename(path))
         top.geometry(f'800x600')
+        top.config(background='#fff')
         with open(path, encoding='utf-8') as f:
-            text = f.read()
-        label = tk.Label(top, font=('Arial', 20), text=text, wraplength=800)
-        label.pack()
+            text_ = f.read()
+
+        scrollbar = tk.Scrollbar(top)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        text = tk.Text(top, yscrollcommand=scrollbar.set, font=(None, 18), wrap=tk.WORD, highlightthickness=0,
+                       relief='flat')
+        text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        scrollbar.config(command=text.yview)
+
+        text.insert(tk.END, text_)
+        text.config(state=tk.DISABLED)
 
     def show_image(self, path):
         top = tk.Toplevel(self.root)
@@ -115,8 +126,13 @@ class File_Explorer:
                 if not os.path.isdir(os.path.join(self.dir, f)):
                     files.append(f)
 
+            folder_img = Image.open('icons/folder.png')
+            self.folder_icon = ImageTk.PhotoImage(folder_img.resize((16, 16)))
+
             for d in sorted(dirs):
-                self.tree.insert('', 'end', text=d, values=('', 'Папка'), tags=('dir',))
+                self.tree.insert('', 'end', text=f' {d}',
+                                 values=('', 'Папка'),
+                                 image=self.folder_icon, tags=('dir',))
 
             for f in sorted(files):
                 full_path = os.path.join(self.dir, f)
