@@ -1,1 +1,0 @@
-Практическое руководство по работе с Web Speech API в JavaScript. Рассказываем, как создать веб-страницу, реализующую  преобразование текста в речь.https://nsprg.ru/xlpqdxVK: https://nsprg.ru/xJl0aOДзен: https://nsprg.ru/mz3EDx@nuancesprog #JavaScript

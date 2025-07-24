@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 import json
 from settings import SUPPORTED_CONTENT_TYPES
 from tkinter import messagebox
+import cv2
 
 
 class File_Explorer:
@@ -23,7 +24,11 @@ class File_Explorer:
         self.update_file_list()
 
     def create_widgets(self):
-        self.tree = ttk.Treeview(self.root, columns=('Image', 'Size', 'Type'), selectmode='browse')
+        self.container = ttk.Frame(self.root)
+        self.container.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        self.tree = ttk.Treeview(self.container, columns=('Image', 'Size', 'Type'), selectmode='browse')
+
         self.tree.heading('#0', text='Имя')
         self.tree.heading('Size', text='Размер')
         self.tree.heading('Type', text='Тип')
@@ -32,8 +37,28 @@ class File_Explorer:
         self.tree.column('Size', width=100)
         self.tree.column('Type', width=100)
 
+        vsb = ttk.Scrollbar(self.container, orient='vertical', command=self.tree.yview)
+        self.tree.configure(yscrollcommand=vsb.set)
+
         self.tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.tree.bind('<Double-1>', self.on_double_click)
+        self.tree.bind('<Button-3>', self.show_context_menu)
+
+        self.context_menu = tk.Menu(self.root, tearoff=0)
+        self.context_menu.add_command(label='Удалить', command=self.delete_item)
+        self.context_menu.add_command(label='Открыть', command=self.open_item)
+
+    def delete_item(self):
+        pass
+
+    def open_item(self):
+        pass
+
+    def show_context_menu(self, event):
+        item = self.tree.identify_row(event.y)
+        if item:
+            self.tree.selection_set(item)
+            self.context_menu.post(event.x_root, event.y_root)
 
     def on_double_click(self, event):
         try:
@@ -42,7 +67,7 @@ class File_Explorer:
             if name == '..':
                 self.go_up()
             else:
-                full_path = os.path.join(self.dir, name)
+                full_path = os.path.join(self.dir, name).replace(' ', '')
                 if os.path.isdir(full_path):
                     self.dir = full_path
                     self.update_file_list()
@@ -59,11 +84,37 @@ class File_Explorer:
             elif type_ == 'Текст':
                 self.show_text(full_path)
             elif type_ == 'Видео':
-                print('видео')
+                self.show_video(full_path)
             else:
                 messagebox.showerror('Непонятен тип файла')
         except:
             pass
+
+    def show_video(self, full_path):
+        top = tk.Toplevel(self.root)
+        top.title(os.path.basename(full_path))
+        top.geometry(f'800x600')
+        top.config(background='#fff')
+        self.video_label = tk.Label(top)
+        self.video_label.pack()
+
+        self.play_video(full_path)
+
+    def play_video(self, path):
+        c = cv2.VideoCapture(path)
+
+        def update_frame():
+            ret, frame = c.read()
+            if ret:
+                img = Image.fromarray(frame)
+                imgtk = ImageTk.PhotoImage(image=img)
+                self.video_label.imgtk = imgtk
+                self.video_label.configure(image=imgtk)
+                self.video_label.after(10, update_frame)
+            else:
+                c.release()
+
+        update_frame()
 
     def show_text(self, path):
         top = tk.Toplevel(self.root)
@@ -134,11 +185,17 @@ class File_Explorer:
                                  values=('', 'Папка'),
                                  image=self.folder_icon, tags=('dir',))
 
+            image_img = Image.open('icons/image.png')
+            self.image_icon = ImageTk.PhotoImage(image_img.resize((16, 16)))
+
             for f in sorted(files):
                 full_path = os.path.join(self.dir, f)
                 size = self.get_size(os.path.getsize(full_path))
                 file_type = self.get_file_type(f)
-                self.tree.insert('', 'end', text=f, values=(size, file_type), tags=('file',))
+                if file_type == 'Изображение':
+                    self.tree.insert('', 'end', text=f, image=self.image_icon, values=(size, file_type), tags=('img',))
+                else:
+                    self.tree.insert('', 'end', text=f, values=(size, file_type), tags=('file',))
 
         except:
             pass

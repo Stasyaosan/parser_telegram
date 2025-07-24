@@ -1,1 +1,0 @@
-SMOTE - одна из распространенных стратегий сэмплинга, позволяющая решить проблему дисбаланса классов. Это пошаговое руководство по использованию алгоритма SMOTE в Python позволит избежать просчетов в МО.https://nsprg.ru/mEGgyvVK: https://nsprg.ru/m01nkxДзен: https://nsprg.ru/vXoJyx@nuancesprog #MachineLearning #SMOTE
