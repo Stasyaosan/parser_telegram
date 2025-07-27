@@ -73,7 +73,15 @@ class TelegramParserView:
             self.folder_entry.insert(0, self.folder_path_var.get())
         return folder_path
 
+    def file_explorer(self):
+        pass
+
     def create_widgets(self):
+        self.menubar = tk.Menu(self.root)
+        self.menu = tk.Menu(self.menubar, tearoff=0)
+        self.menu.add_command(label='Просмотр содержимого', command=self.file_explorer)
+        self.root.config(menu=self.menubar)
+
         self.file_frame = tk.LabelFrame(self.root, text='Файл с каналами telegram')
         self.file_entry = tk.Entry(self.file_frame, width=50)
         self.browse_btn = tk.Button(self.file_frame, text='Обзор...')

@@ -1,4 +1,5 @@
 import os
+import shutil
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
@@ -27,7 +28,7 @@ class File_Explorer:
         self.container = ttk.Frame(self.root)
         self.container.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        self.tree = ttk.Treeview(self.container, columns=('Image', 'Size', 'Type'), selectmode='browse')
+        self.tree = ttk.Treeview(self.container, columns=('Size', 'Type'), selectmode='browse')
 
         self.tree.heading('#0', text='Имя')
         self.tree.heading('Size', text='Размер')
@@ -43,16 +44,45 @@ class File_Explorer:
         self.tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.tree.bind('<Double-1>', self.on_double_click)
         self.tree.bind('<Button-3>', self.show_context_menu)
+        self.tree.bind('<Delete>', self.event_delete)
+        self.tree.bind('<BackSpace>', self.event_backspase)
 
         self.context_menu = tk.Menu(self.root, tearoff=0)
         self.context_menu.add_command(label='Удалить', command=self.delete_item)
         self.context_menu.add_command(label='Открыть', command=self.open_item)
 
+    def event_delete(self, event):
+        self.delete_item()
+
+    def event_backspase(self, event):
+        self.go_up()
+
     def delete_item(self):
-        pass
+        selected_item = self.tree.selection()
+        if selected_item:
+            item_name = self.tree.item(selected_item, 'text')
+            full_path = os.path.join(self.dir, item_name)
+            if os.path.isfile(full_path):
+                confirm = messagebox.askyesno('Подтверждение', 'Вы действительно хотите удалить этот файл?')
+                if confirm:
+                    os.remove(full_path)
+            else:
+                confirm = messagebox.askyesno('Подтверждение', 'Вы действительно хотите удалить эту папку?')
+                if confirm:
+                    shutil.rmtree(full_path.replace(' ', ''))
+            self.update_file_list()
 
     def open_item(self):
-        pass
+        item = self.tree.selection()[0]
+        name = self.tree.item(item, 'text')
+
+        full_path = os.path.join(self.dir, name).replace(' ', '')
+
+        if os.path.isdir(full_path):
+            self.dir = full_path
+            self.update_file_list()
+        else:
+            self.open_file(full_path)
 
     def show_context_menu(self, event):
         item = self.tree.identify_row(event.y)
