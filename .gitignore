@@ -1,2 +1,4 @@
 /.venv
 /.idea
+2/*
+!2/.gitkeep

@@ -1,6 +1,8 @@
+import os.path
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
+import json
 
 class TelegramParserView:
     def __init__(self, root):
@@ -20,25 +22,74 @@ class TelegramParserView:
         self.setup_layout()
 
 
+        if os.path.exists('file_browse.json'):
+            with open('file_browse.json', 'r', encoding='utf-8') as f:
+                file = json.load(f)
+            file = file['file']
+            self.file_path_var.set(file)
+            self.file_entry.insert(0, self.file_path_var.get())
+
+        if os.path.exists('folder_browse.json'):
+            with open('folder_browse.json', 'r', encoding='utf-8') as f:
+                file = json.load(f)
+            file = file['file']
+            self.folder_path_var.set(file)
+            self.folder_entry.insert(0, self.folder_path_var.get())
+
+
+
+
 
 
     def browse_file(self):
+
         file_path = filedialog.askopenfilename(filetypes=[('Text files', '*.txt')])
         if file_path:
-            self.file_path_var.set(file_path)
+            if os.path.exists('file_browse.json'):
+                with open('file_browse.json', 'r', encoding='utf-8') as f:
+                    file = json.load(f)
+                file = file['file']
+            else:
+                d = {'file': file_path}
+
+                with open('file_browse.json', 'w', encoding='utf-8') as f:
+                    json.dump(d, f, indent=4)
+                file = file_path
+
+            self.file_path_var.set(file)
             self.file_entry.insert(0, self.file_path_var.get())
+
         return file_path
 
 
     def browse_folder(self):
         folder_path = filedialog.askdirectory()
         if folder_path:
-            self.folder_path_var.set(folder_path)
+            if os.path.exists('folder_browse.json'):
+                with open('folder_browse.json', 'r', encoding='utf-8') as f:
+                    file = json.load(f)
+                file = file['file']
+            else:
+                d = {'file': folder_path}
+
+                with open('folder_browse.json', 'w', encoding='utf-8') as f:
+                    json.dump(d, f, indent=4)
+                file = folder_path
+            self.folder_path_var.set(file)
             self.folder_entry.insert(0, self.folder_path_var.get())
         return folder_path
 
+    def file_explorer(self):
+        pass
 
     def create_widgets(self):
+        self.menubar = tk.Menu(self.root)
+
+        self.file_menu = tk.Menu(self.menubar, tearoff=0)
+        self.file_menu.add_command(label='Просмотр содержимого', command=self.file_explorer)
+
+
+
         self.file_frame = tk.LabelFrame(self.root, text='Файл с каналами telegram')
         self.file_entry = tk.Entry(self.file_frame, width=50)
         self.browse_btn = tk.Button(self.file_frame, text='Обзор...')
@@ -59,6 +110,7 @@ class TelegramParserView:
         self.control_frame = tk.Frame(self.root)
         self.start_btn = tk.Button(self.control_frame, text='Начать парсинг')
         self.stop_btn = tk.Button(self.control_frame, text='Остановить', state=tk.DISABLED)
+        self.view_btn = tk.Button(self.control_frame, text='Просмотр файлов')
 
 
         self.log_frame = tk.LabelFrame(self.root, text='Лог выполнения')
@@ -68,6 +120,8 @@ class TelegramParserView:
 
 
         self.progress_bar = ttk.Progressbar(self.root, variable=self.progress_var, maximum=100, mode='determinate')
+
+
 
     def setup_layout(self):
         self.file_frame.pack(pady=10, padx=10, fill=tk.X)
@@ -83,19 +137,26 @@ class TelegramParserView:
         self.control_frame.pack(pady=5, padx=5, fill=tk.X)
         self.start_btn.pack(side=tk.LEFT, padx=5)
         self.stop_btn.pack(side=tk.LEFT, padx=5)
+        self.view_btn.pack(side=tk.LEFT, padx=5)
 
         self.log_frame.pack(padx=5, pady=5, fill=tk.BOTH, expand=True)
         self.log_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.log_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.progress_bar.pack(pady=5, padx=5, fill=tk.X)
+        self.root.config(menu=self.menubar)
 
     def clear_log(self):
         self.log_text.delete(1.0, tk.END)
 
-    def log_message(self, message):
-        self.log_text.insert(tk.END, message + '\n')
+    def log_message(self, message, color='black'):
+        self.log_text.config(state=tk.NORMAL)
+        self.log_text.insert('end', message + '\n', color)
+
+
+        self.log_text.tag_config(color, foreground=color)
         self.log_text.see(tk.END)
+        self.log_text.config(state=tk.DISABLED)
         self.root.update()
 
     def get_selected_content_type(self):
